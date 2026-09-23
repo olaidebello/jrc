@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operations Control Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1620; --panel:#161F2C; --panel2:#1D2836; --line:#2A3646;
+  --ink:#EAF0F7; --ink-dim:#94A3B8; --ink-faint:#5A6B80;
+  --blue:#5B8DEF; --amber:#E8A33D; --green:#49B37E; --red:#E2574C;
+  --mono:'IBM Plex Mono',monospace; --head:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media(prefers-color-scheme:light){ :root:not([data-theme="dark"]){ } }
+*{box-sizing:border-box;}
+html{scroll-padding-top:64px;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:-0.01em;}
+p{margin:0;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;background:rgba(15,22,32,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  padding:env(safe-area-inset-top,0px) 0 0 0;}
+.navwrap{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:24px;overflow-x:auto;}
+.navwrap::-webkit-scrollbar{display:none;}
+.brand{font-family:var(--mono);font-size:12px;color:var(--blue);white-space:nowrap;letter-spacing:.02em;}
+.navlinks{display:flex;gap:4px;flex-wrap:nowrap;}
+.navlinks a{color:var(--ink-dim);text-decoration:none;font-size:13px;padding:7px 11px;border-radius:6px;white-space:nowrap;transition:background .15s,color .15s;}
+.navlinks a:hover,.navlinks a:focus-visible{color:var(--ink);background:var(--panel2);}
+
+/* HERO */
+.hero{max-width:1180px;margin:0 auto;padding:72px 24px 48px;}
+.hero .kicker{font-family:var(--mono);font-size:12px;color:var(--amber);margin-bottom:18px;}
+.hero h1{font-size:clamp(32px,5vw,54px);line-height:1.05;max-width:14ch;color:var(--ink);}
+.hero .sub{max-width:56ch;color:var(--ink-dim);font-size:16px;margin-top:18px;}
+.flowstrip{margin-top:44px;display:flex;flex-wrap:wrap;align-items:center;gap:0;font-family:var(--mono);font-size:12.5px;}
+.flowstrip .node{background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:9px 13px;border-radius:7px;white-space:nowrap;}
+.flowstrip .arrow{color:var(--ink-faint);padding:0 8px;}
+
+/* SECTION shell */
+section{max-width:1180px;margin:0 auto;padding:56px 24px;border-top:1px solid var(--line);}
+.sectitle{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;}
+.sectitle .num{font-family:var(--mono);font-size:13px;color:var(--amber);}
+.sectitle h2{font-size:26px;}
+.secgoal{color:var(--ink-dim);font-size:14.5px;max-width:62ch;margin-top:6px;margin-bottom:32px;}
+
+/* GRID / CARDS */
+.grid{display:grid;gap:16px;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:820px){.g3,.g2{grid-template-columns:1fr;}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;}
+.card h3{font-size:15px;color:var(--ink);margin-bottom:10px;}
+.card p, .card li{color:var(--ink-dim);font-size:13.8px;}
+.card ul{margin:0;padding-left:18px;}
+.card li{margin-bottom:5px;}
+
+/* PIPE (control section owners) */
+.owner{border-radius:10px;padding:22px;border:1px solid var(--line);background:var(--panel);}
+.owner .tag{font-family:var(--mono);font-size:11.5px;padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:12px;}
+.owner.ghl .tag{background:rgba(91,141,239,.14);color:var(--blue);}
+.owner.trello .tag{background:rgba(73,179,126,.14);color:var(--green);}
+.owner.slack .tag{background:rgba(232,163,61,.14);color:var(--amber);}
+.owner h3{font-size:17px;margin-bottom:8px;}
+.owner .q{font-style:normal;color:var(--ink);font-size:14px;border-left:2px solid var(--line);padding-left:12px;margin-top:14px;}
+
+/* ACCORDION */
+.acc-item{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:10px;overflow:hidden;}
+.acc-btn{width:100%;text-align:left;background:none;border:none;color:var(--ink);font-family:var(--body);font-size:14.5px;font-weight:600;
+  padding:16px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:16px;}
+.acc-btn:hover{background:var(--panel2);}
+.acc-btn .chev{font-family:var(--mono);color:var(--ink-faint);transition:transform .2s;font-size:13px;flex-shrink:0;}
+.acc-item.open .chev{transform:rotate(45deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.acc-item.open .acc-body{max-height:600px;}
+.acc-inner{padding:2px 20px 20px;color:var(--ink-dim);font-size:14px;}
+.acc-inner ul{margin:8px 0 0;padding-left:18px;}
+.acc-inner li{margin-bottom:5px;}
+.kpi-pill{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--blue);background:rgba(91,141,239,.12);padding:3px 9px;border-radius:5px;margin-top:10px;}
+
+/* SELECT / SCENARIO */
+.scenario{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px;}
+.scenario label{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-bottom:8px;}
+select{width:100%;max-width:420px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:11px 14px;border-radius:7px;font-size:14px;font-family:var(--body);}
+.scenario-out{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:none;}
+.scenario-out.show{display:block;}
+.scenario-out .status{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:5px;display:inline-block;margin-bottom:10px;}
+.status.green{background:rgba(73,179,126,.14);color:var(--green);}
+.status.amber{background:rgba(232,163,61,.14);color:var(--amber);}
+.status.red{background:rgba(226,87,76,.14);color:var(--red);}
+.scenario-out p{color:var(--ink);font-size:14.5px;}
+
+/* STATUS DEMO */
+.statuscards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:820px){.statuscards{grid-template-columns:1fr;}}
+.scard{border-radius:10px;padding:18px 20px;border:1px solid var(--line);}
+.scard.green{background:rgba(73,179,126,.07);border-color:rgba(73,179,126,.3);}
+.scard.amber{background:rgba(232,163,61,.07);border-color:rgba(232,163,61,.3);}
+.scard.red{background:rgba(226,87,76,.07);border-color:rgba(226,87,76,.3);}
+.scard .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;}
+.scard.green .dot{background:var(--green);} .scard.amber .dot{background:var(--amber);} .scard.red .dot{background:var(--red);}
+.scard h3{font-size:14px;display:flex;align-items:center;margin-bottom:8px;}
+.scard p{color:var(--ink-dim);font-size:13.5px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13.8px;}
+th{text-align:left;font-family:var(--mono);font-size:11px;color:var(--ink-faint);font-weight:500;padding:10px 14px;border-bottom:1px solid var(--line);}
+td{padding:13px 14px;border-bottom:1px solid var(--line);color:var(--ink-dim);}
+td:first-child{color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+
+/* END STATE diagram */
+.endwrap{display:flex;gap:40px;flex-wrap:wrap;}
+.endcol{flex:1;min-width:260px;}
+.endcol h3{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin-bottom:16px;}
+.chain{display:flex;flex-direction:column;gap:0;}
+.chain .step{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:13.5px;color:var(--ink-dim);text-align:center;}
+.chain .step.hot{color:var(--ink);border-color:var(--red);}
+.chain .connector{text-align:center;color:var(--ink-faint);font-size:13px;padding:4px 0;}
+
+footer{max-width:1180px;margin:0 auto;padding:40px 24px 80px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<nav><div class="navwrap">
+  <div class="brand">OPS://FRAMEWORK</div>
+  <div class="navlinks">
+    <a href="#control">Control</a><a href="#flow">Flow</a><a href="#plan">Plan</a><a href="#assign">Assign</a>
+    <a href="#execute">Execute</a><a href="#accountability">Accountability</a><a href="#measure">Measure</a>
+    <a href="#improve">Improve</a><a href="#team">A-Team</a><a href="#endstate">End State</a>
+  </div>
+</div></nav>
+
+<div class="hero">
+  <div class="kicker">OPERATIONS MANAGEMENT FRAMEWORK</div>
+  <h1>We don't schedule jobs. We plan successful operations.</h1>
+  <p class="sub">A system that separates commercial control, operational execution, and communication — so the owner stops firefighting every job and starts running exceptions.</p>
+  <div class="flowstrip">
+    <span class="node">Lead</span><span class="arrow">→</span>
+    <span class="node">Sales</span><span class="arrow">→</span>
+    <span class="node">Proposal</span><span class="arrow">→</span>
+    <span class="node">Follow-Up</span><span class="arrow">→</span>
+    <span class="node">Booked Job</span><span class="arrow">→</span>
+    <span class="node">Job Planning</span><span class="arrow">→</span>
+    <span class="node">Crew Assignment</span><span class="arrow">→</span>
+    <span class="node">Job Completion</span><span class="arrow">→</span>
+    <span class="node" style="border-color:var(--amber);color:var(--amber);">Owner Independence</span>
+  </div>
+</div>
+
+<section id="control">
+  <div class="sectitle"><span class="num">01</span><h2>Control — one source of truth</h2></div>
+  <p class="secgoal">Three tools, three distinct jobs. None of them should overlap, and Slack should never become the system of record.</p>
+  <div class="grid g3">
+    <div class="owner ghl"><span class="tag">GHL</span><h3>Commercial control</h3>
+      <p style="color:var(--ink-dim);font-size:13.8px;">New Lead → Contacted → Qualified → Proposal → Follow-Up → Won/Booked → Lost. Tracks lead source, owner, proposal value, next action, booking status.</p>
+      <p class="q">"Where does every opportunity stand?"</p>
+    </div>
+    <div class="owner trello"><span class="tag">TRELLO</span><h3>Operational control</h3>
+      <p style="color:var(--ink-dim);font-size:13.8px;">Booked → Planning → Ready → Assigned → In Progress → Completed → Closed. Owns everything after the job is sold.</p>
+      <p class="q">"What needs to happen to execute this job?"</p>
+    </div>
+    <div class="owner slack"><span class="tag">SLACK</span><h3>Communication</h3>
+      <p style="color:var(--ink-dim);font-size:13.8px;">Urgent communication, exceptions, coordination, escalation, decisions in the moment.</p>
+      <p class="q">Never the source of truth — just where people talk.</p>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="sectitle"><span class="num">02</span><h2>Flow — engineer the handoffs</h2></div>
+  <p class="secgoal">This is where operations thinking shows, not just software. Click a stage to see what has to be true before work moves forward.</p>
+  <div id="acc-flow"></div>
+</section>
+
+<section id="plan">
+  <div class="sectitle"><span class="num">03</span><h2>Plan — booked is not ready</h2></div>
+  <p class="secgoal">Once a job is booked, it moves from sales execution to operational readiness. Nothing becomes "Ready" until every checklist item clears.</p>
+  <div class="grid g3" id="checklist"></div>
+</section>
+
+<section id="assign">
+  <div class="sectitle"><span class="num">04</span><h2>Assign — right job, right crew</h2></div>
+  <p class="secgoal">Not "who's available" — "who's capable of executing this specific job." Try the scenario below.</p>
+  <div class="scenario">
+    <label for="crewSelect">SCENARIO: A crew leader cancels 4 hours before a job</label>
+    <select id="crewSelect">
+      <option value="">Select a response...</option>
+      <option value="bad">"I'll find someone"</option>
+      <option value="good">Backup Crew Leader takes ownership</option>
+    </select>
+    <div class="scenario-out" id="scenarioOut"></div>
+  </div>
+</section>
+
+<section id="execute">
+  <div class="sectitle"><span class="num">05</span><h2>Execute — manage by exception</h2></div>
+  <p class="secgoal">The Operations Manager doesn't chase every crew every day. The system surfaces where attention is actually needed.</p>
+  <div class="statuscards">
+    <div class="scard green"><h3><span class="dot"></span>Green</h3><p>Crew confirmed, equipment ready, customer confirmed. Job proceeding normally — no action needed.</p></div>
+    <div class="scard amber"><h3><span class="dot"></span>Amber</h3><p>Crew Leader hasn't confirmed by deadline. Potential issue — needs a look before it becomes urgent.</p></div>
+    <div class="scard red"><h3><span class="dot"></span>Red</h3><p>Crew cancellation with no backup identified. At risk — escalation required now.</p></div>
+  </div>
+</section>
+
+<section id="accountability">
+  <div class="sectitle"><span class="num">06</span><h2>Accountability — every item has an owner</h2></div>
+  <p class="secgoal">Nobody should be able to say "I thought someone else was handling it."</p>
+  <table>
+    <thead><tr><th>Responsibility</th><th>Owner</th><th>Deadline</th><th>Escalation</th></tr></thead>
+    <tbody>
+      <tr><td>Proposal follow-up</td><td>Sales</td><td>24 hrs</td><td>Ops Manager</td></tr>
+      <tr><td>Job information</td><td>Coordinator</td><td>48 hrs before job</td><td>Ops Manager</td></tr>
+      <tr><td>Crew confirmation</td><td>Crew Leader</td><td>24 hrs before</td><td>Backup</td></tr>
+      <tr><td>Equipment</td><td>Coordinator</td><td>24 hrs before</td><td>Ops Manager</td></tr>
+      <tr><td>Customer confirmation</td><td>Coordinator</td><td>24 hrs before</td><td>Ops Manager</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="measure">
+  <div class="sectitle"><span class="num">07</span><h2>Measure — KPIs that diagnose</h2></div>
+  <p class="secgoal">Four groups, not a metrics dump.</p>
+  <div class="grid g2" id="kpiGrid"></div>
+</section>
+
+<section id="improve">
+  <div class="sectitle"><span class="num">08</span><h2>Improve — fix the system, not the incident</h2></div>
+  <p class="secgoal">When something goes wrong, the response is structural, not reactive.</p>
+  <div class="grid g2">
+    <div class="card" style="border-color:var(--red);"><h3 style="color:var(--red);">Bad response</h3><p>Find someone. The gap repeats next time.</p></div>
+    <div class="card" style="border-color:var(--green);"><h3 style="color:var(--green);">Operational response</h3>
+      <p>Find replacement → execute job → identify why there was no effective contingency → create backup requirement → monitor compliance.</p></div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="sectitle"><span class="num">09</span><h2>Build the A-team</h2></div>
+  <p class="secgoal">Authority moves progressively down the chain: Owner → Operations Manager → Crew Leaders → Crews. Each Crew Leader eventually owns their job end to end.</p>
+  <div class="grid g3">
+    <div class="card"><h3>Crew Leader owns</h3><ul><li>Reviewing job info & scope</li><li>Preparing crew</li><li>Normal field decisions</li><li>Communicating issues</li><li>Completing & documenting the job</li></ul></div>
+    <div class="card"><h3>Ops Manager owns</h3><ul><li>The system and KPIs</li><li>Exceptions only — not micromanaging every crew</li></ul></div>
+    <div class="card"><h3>Owner owns</h3><ul><li>Strategic decisions</li><li>True escalations only</li></ul></div>
+  </div>
+</section>
+
+<section id="endstate">
+  <div class="sectitle"><span class="num">10</span><h2>The end state</h2></div>
+  <p class="secgoal">Today vs. target — the picture that should anchor the meeting.</p>
+  <div class="endwrap">
+    <div class="endcol">
+      <h3>TODAY</h3>
+      <div class="chain">
+        <div class="step hot">Owner</div><div class="connector">↓</div>
+        <div class="step hot">Every problem</div><div class="connector">↓</div>
+        <div class="step hot">Every job</div><div class="connector">↓</div>
+        <div class="step hot">Every crew decision</div><div class="connector">↓</div>
+        <div class="step hot">Constant interruptions</div>
+      </div>
+    </div>
+    <div class="endcol">
+      <h3>TARGET STATE</h3>
+      <div class="chain">
+        <div class="step">GHL — Revenue & Customer Lifecycle</div><div class="connector">↓</div>
+        <div class="step">Trello — Operational Execution</div><div class="connector">↓</div>
+        <div class="step">Crew Leaders — Job Ownership</div><div class="connector">↓</div>
+        <div class="step">Slack — Communication & Exceptions</div><div class="connector">↓</div>
+        <div class="step">Ops Manager — Controls system, KPIs, accountability</div><div class="connector">↓</div>
+        <div class="step" style="border-color:var(--amber);color:var(--amber);">Owner — strategic decisions only</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>OPERATIONS CONTROL FRAMEWORK — CONTROL / FLOW / PLAN / ASSIGN / EXECUTE / ACCOUNTABILITY / MEASURE / IMPROVE</footer>
+
+<script>
+// Flow accordion
+const flowData = [
+  {t:"Lead → Sales", body:"Capture source · Assign owner · Set response expectation · Track contact attempts · Qualify opportunity", kpi:"KPI: Lead response / contact rate"},
+  {t:"Sales → Proposal", body:"Scope understood · Customer requirements captured · Pricing prepared · Proposal sent · Follow-up date established", kpi:"KPI: Proposal conversion"},
+  {t:"Proposal → Booked", body:"Every open proposal has an owner, next action, and due date. No response → Follow-up → Follow-up → Escalation/Close. Never 'I'll get back to them.'", kpi:""}
+];
+const flowEl = document.getElementById('acc-flow');
+flowData.forEach((f,i)=>{
+  const item = document.createElement('div'); item.className='acc-item';
+  item.innerHTML = `<button class="acc-btn" aria-expanded="false"><span>${f.t}</span><span class="chev">+</span></button>
+    <div class="acc-body"><div class="acc-inner">${f.body}${f.kpi?`<div class="kpi-pill">${f.kpi}</div>`:''}</div></div>`;
+  flowEl.appendChild(item);
+});
+
+// Checklist cards
+const checklist = [
+  {h:"Customer & Scope", items:["Address & access confirmed","Customer expectations documented","Scope clearly understood","Special requirements & duration"]},
+  {h:"Crew & Equipment", items:["Correct Crew Leader assigned","Required crew size & skills","Equipment identified & available"]},
+  {h:"Contingency & Comms", items:["Backup Crew Leader identified","Escalation path established","Crew briefed, customer confirmed"]}
+];
+document.getElementById('checklist').innerHTML = checklist.map(c=>`
+  <div class="card"><h3>${c.h}</h3><ul>${c.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('');
+
+// KPI grid
+const kpis = [
+  {h:"Revenue", items:["Lead response time","Lead-to-booking conversion","Proposal conversion","Follow-up completion"]},
+  {h:"Job readiness", items:["% jobs ready before deadline","Last-minute crew changes","Jobs missing required info","Equipment failures"]},
+  {h:"Field execution", items:["On-time completion","Reschedules & cancellations","Customer complaints","Rework"]},
+  {h:"Owner dependency", items:["Operational decisions requiring owner intervention — the goal: this trends down as team ownership trends up"]}
+];
+document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`
+  <div class="card"><h3>${k.h}</h3><ul>${k.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('');
+
+// Accordion toggle (event delegation)
+document.body.addEventListener('click', e=>{
+  const btn = e.target.closest('.acc-btn');
+  if(!btn) return;
+  const item = btn.closest('.acc-item');
+  const open = item.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open);
+});
+
+// Scenario select
+document.getElementById('crewSelect').addEventListener('change', e=>{
+  const out = document.getElementById('scenarioOut');
+  const v = e.target.value;
+  if(!v){ out.classList.remove('show'); return; }
+  out.classList.add('show');
+  if(v==='bad'){
+    out.innerHTML = `<span class="status red">RISK</span><p>No pre-identified backup means the search itself becomes the emergency. The job is now at risk of a late start, a scrambled crew, or a missed appointment — and the owner gets pulled in to fix it personally.</p>`;
+  } else {
+    out.innerHTML = `<span class="status green">CONTROLLED</span><p>Because the contingency existed before the emergency: Backup takes ownership → verifies readiness → communicates with the customer → executes. No owner involvement required. This is the $4,000 scenario solved in advance.</p>`;
+  }
+});
+</script>
+</body>
+</html>
